@@ -15,9 +15,6 @@ An end-to-end CI/CD pipeline for a Java web application. A push to GitHub trigge
 5. [Jenkinsfile](#jenkinsfile)
 6. [Triggering the Pipeline](#triggering-the-pipeline)
 7. [Verification](#verification)
-8. [Screenshots](#screenshots)
-9. [Troubleshooting](#troubleshooting)
-10. [Security Notes](#security-notes)
 
 ---
 
@@ -68,8 +65,8 @@ Two EC2 instances are used, one for CI and one for hosting the application.
 
 | Instance | Purpose | Inbound ports |
 |---|---|---|
-| Jenkins server | Builds and deploys | 22 (my IP), 8080 (my IP) |
-| Tomcat server | Runs the application | 22 (my IP), 8080 (my IP and the Jenkins security group) |
+| Jenkins server | Builds and deploys | 22, 8080 |
+| Tomcat server | Runs the application | 22, 8080 (the Jenkins security group) |
 
 Both instances live in the same VPC, so Jenkins deploys to Tomcat using Tomcat's **private IP**.
 
@@ -100,10 +97,11 @@ The project is a Maven web application (`<packaging>war</packaging>` in `pom.xml
 3. Install and start Jenkins:
 
    ```bash
-   sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
-   sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+   sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/rpm-stable/jenkins.repo
    sudo yum install -y jenkins
-   sudo systemctl enable --now jenkins
+   sudo systemctl daemon-reload
+   sudo systemctl start jenkins
+   sudo systemctl status jenkins
    ```
 
 4. Retrieve the initial admin password:
@@ -129,7 +127,6 @@ The project is a Maven web application (`<packaging>war</packaging>` in `pom.xml
    sudo wget https://downloads.apache.org/tomcat/tomcat-9/v9.0.122/bin/apache-tomcat-9.0.x.tar.gz
    sudo tar -xzf apache-tomcat-9.0.X.tar.gz
    sudo mv apache-tomcat-9.0.X tomcat
-   sudo chown -R ec2-user:ec2-user /opt/tomcat
    chmod +x /opt/tomcat/bin/*.sh
    ```
 
@@ -150,8 +147,7 @@ The project is a Maven web application (`<packaging>war</packaging>` in `pom.xml
 5. Start Tomcat as a non-root user:
 
    ```bash
-   sudo -u ec2-user /opt/tomcat/bin/startup.sh
-   curl -I http://localhost:8080
+   sudo /opt/tomcat/bin/startup.sh
    ```
 
 6. Confirm `http://<TOMCAT_IP>:8080` and `http://<TOMCAT_IP>:8080/manager/html` load.
